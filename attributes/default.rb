@@ -17,7 +17,6 @@ default["apache_kafka"]["kafka_heap_opts"] = "-Xmx512M -Xms256M"
 default["apache_kafka"]["install_java"] = true
 
 default["apache_kafka"]["install_dir"] = "/usr/local/kafka"
-default["apache_kafka"]["data_dir"] = "/var/log/kafka"
 default["apache_kafka"]["log_dir"] = "/var/log/kafka"
 default["apache_kafka"]["bin_dir"] = "/usr/local/kafka/bin"
 default["apache_kafka"]["config_dir"] = "/usr/local/kafka/config"
@@ -32,7 +31,8 @@ default["apache_kafka"]["service_style"] = "upstart"
 # the override and allow the host to fall back to the default value.
 default["apache_kafka"]["broker.id"] = nil
 default["apache_kafka"]["port"] = 9092
-default["apache_kafka"]["zookeeper.connect"] = nil
+default["apache_kafka"]["zookeeper.connect"] = "localhost:2181"
+set["apache_kafka"]["zookeeper.connect"] = Array(node["apache_kafka"]["zookeeper.connect"]).join(",")
 
 # Check in /var/log/kafka/server.log for invalid entries
 #
@@ -45,7 +45,7 @@ default["apache_kafka"]["conf"]["server"] = {
     # "default.replication.factor" => 2,
     #
     # For a full list reference kafka's config documentation
-    "log.dirs" => node["apache_kafka"]["data_dir"],
+    "log.dirs" => node["apache_kafka"]["log_dir"],
     "delete.topic.enable" => "true"
   }
 }

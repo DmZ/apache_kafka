@@ -6,7 +6,6 @@
 [
   node["apache_kafka"]["config_dir"],
   node["apache_kafka"]["bin_dir"],
-  node["apache_kafka"]["data_dir"],
   node["apache_kafka"]["log_dir"],
 ].each do |dir|
   directory dir do
@@ -23,17 +22,16 @@ end
     mode "0755"
     variables(
       :config_dir => node["apache_kafka"]["config_dir"],
-      :bin_dir => node["apache_kafka"]["bin_dir"]
+      :bin_dir => node["apache_kafka"]["bin_dir"],
+      :log_dir => node["apache_kafka"]["log_dir"]
     )
     notifies :restart, "service[kafka]", :delayed
   end
 end
 
-broker_id = node["apache_kafka"]["broker.id"]
-broker_id = 0 if broker_id.nil?
-
-zookeeper_connect = node["apache_kafka"]["zookeeper.connect"]
-zookeeper_connect = "localhost:2181" if zookeeper_connect.nil?
+array = node["apache_kafka"]["broker.id"] 
+hash = Hash[array.map.with_index.to_a]
+broker_id = hash[node["ipaddress"]]
 
 template ::File.join(node["apache_kafka"]["config_dir"],
                      node["apache_kafka"]["conf"]["server"]["file"]) do
@@ -44,7 +42,7 @@ template ::File.join(node["apache_kafka"]["config_dir"],
   variables(
     :broker_id => broker_id,
     :port => node["apache_kafka"]["port"],
-    :zookeeper_connect => zookeeper_connect,
+    :zookeeper_connect => node["apache_kafka"]["zookeeper.connect"],
     :entries => node["apache_kafka"]["conf"]["server"]["entries"]
   )
   notifies :restart, "service[kafka]", :delayed
