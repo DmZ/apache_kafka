@@ -13,6 +13,7 @@ user node["apache_kafka"]["user"] do
   comment node["apache_kafka"]["user"]
   system true
   shell "/bin/false"
+  home node["apache_kafka"]["install_dir"] 
 end
 
 directory node["apache_kafka"]["install_dir"] do
@@ -31,4 +32,8 @@ end
 execute "unzip kafka source" do
   command "tar -zxvf #{download_path} -C #{node["apache_kafka"]["install_dir"]}"
   not_if { ::File.exist?(::File.join(node["apache_kafka"]["install_dir"], version_tag)) }
+end
+
+execute "change owner for kafka home" do
+  command "chown -R #{node["apache_kafka"]["user"]}:#{node["apache_kafka"]["user"]} #{node["apache_kafka"]["install_dir"]}"
 end
