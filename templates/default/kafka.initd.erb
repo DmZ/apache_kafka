@@ -1,0 +1,63 @@
+#!/bin/bash
+# kafka daemon
+# chkconfig: 345 20 80
+# description: kafka daemon
+# processname: kafka
+
+[ -e "/etc/default/kafka" ] && . "/etc/default/kafka"
+
+DAEMON_USER=$KAFKA_USER
+DAEMON="$KAFKA_BIN/kafka-server-start.sh"
+DAEMON_CONF="$KAFKA_CONFIG/server.properties"
+
+NAME=kafka
+DESC="Apache kafka"
+PIDFILE=/var/run/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
+
+case "$1" in
+start)
+	printf "%-50s" "Starting $NAME..."
+	PID=`runuser -l $DAEMON_USER -c "$DAEMON $DAEMON_CONF" -s /bin/bash > /dev/null 2>&1 & echo $!`
+	#echo "Saving PID" $PID " to " $PIDFILE
+        if [ -z $PID ]; then
+            printf "%s\n" "Fail"
+        else
+            echo $PID > $PIDFILE
+            printf "%s\n" "Ok"
+        fi
+;;
+status)
+        printf "%-50s" "Checking $NAME..."
+        if [ -f $PIDFILE ]; then
+            PID=`cat $PIDFILE`
+            if [ -z "`ps axf | grep ${PID} | grep -v grep`" ]; then
+                printf "%s\n" "Process dead but pidfile exists"
+            else
+                echo "Running"
+            fi
+        else
+            printf "%s\n" "Service not running"
+        fi
+;;
+stop)
+        printf "%-50s" "Stopping $NAME"
+            PID=`cat $PIDFILE`
+            cd $DAEMON_PATH
+        if [ -f $PIDFILE ]; then
+            kill $PID
+            printf "%s\n" "Ok"
+            rm -f $PIDFILE
+        else
+            printf "%s\n" "pidfile not found"
+        fi
+;;
+restart)
+  	$0 stop
+  	$0 start
+;;
+
+*)
+        echo "Usage: $0 {status|start|stop|restart}"
+        exit 1
+esac
